@@ -8,20 +8,14 @@ using Compat: unsafe_string, is_apple
 include("verreq.jl")
 
 glpkname = "glpk-$glpkdefver"
+glpkwinname = "glpk-$glpkwinver"
 glpkdllname = "glpk_$(replace(glpkdefver, ".", "_"))"
+glpkwindllname = "glpk_$(replace(glpkwinver, ".", "_"))"
 
-const _dlsym = (VERSION >= v"0.4.0-dev+3844" ? Libdl.dlsym : dlsym)
+const _dlsym = Libdl.dlsym
 
-if VERSION >= v"0.4-dev"
-    function string_version(str)
-        VersionNumber(str)
-    end
-else
-    function string_version(str)
-        major_ver, minor_ver = match(r"(\d+)\.(\d+)", str).captures
-        # No need for @compat since this is only on <= 0.3
-        VersionNumber(parseint(major_ver), parseint(minor_ver))
-    end
+function string_version(str)
+    VersionNumber(str)
 end
 
 function glpkvalidate(name, handle)
@@ -29,7 +23,7 @@ function glpkvalidate(name, handle)
     ver = string_version(ver_str)
     glpkminver <= ver <= glpkmaxver
 end
-glpkdep = library_dependency("libglpk", aliases = [glpkdllname],
+glpkdep = library_dependency("libglpk", aliases = [glpkdllname,glpkwindllname],
                              validate = glpkvalidate)
 
 # Build from sources (used by Linux, BSD)
@@ -56,7 +50,7 @@ if is_apple()
 end
 
 # Windows
-provides(Binaries, URI("https://bintray.com/artifact/download/tkelman/generic/win$glpkname.zip"),
-         glpkdep, unpacked_dir="$glpkname/w$(Sys.WORD_SIZE)", os = :Windows)
+provides(Binaries, URI("https://bintray.com/artifact/download/tkelman/generic/win$glpkwinname.zip"),
+         glpkdep, unpacked_dir="$glpkwinname/w$(Sys.WORD_SIZE)", os = :Windows)
 
 @compat @BinDeps.install Dict(:libglpk => :libglpk)
